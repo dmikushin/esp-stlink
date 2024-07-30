@@ -1,4 +1,5 @@
 # STLINK implementation for ESP8266
+
 This ESP8266 firmware implements the SWIM protocol for debug access / flashing
 of STM8 devices.
 
@@ -22,27 +23,35 @@ Only slow data transfer speed is implemented, but this shouldn’t really matter
 From what my logic analyzer told me the actual stlink device didn’t use
 high-speed either.
 
-## Building
 
-1. Install [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk)
-1. `sudo apt install esptool`
-1. Compile and flash
+## Prerequisites
+
+This project uses [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) shipped as a Docker container. So Docker must be installed in the system. Additionally, esptool is required:
 
 ```
-ESP_OPEN_SDK=/opt/esp-open-sdk
-export XTENSA_TOOLS_ROOT=$ESP_OPEN_SDK/xtensa-lx106-elf/bin SDK_BASE=$ESP_OPEN_SDK/sdk flash
+sudo apt install esptool
+```
+
+
+## Building
+
+```
+make clean
+make
+```
+
+
+## Flashing ESP firmware
+
+Connect the ESP board via serial interface and flash the firmware:
+
+```
 make flash
 ```
 
-### Using a precompiled binary
-
-Grap the latest `esp-stlink-firmware.tgz` from the releases page and flash it using:
-
-    esptool --baud 460800 --port /dev/ttyUSB0 write_flash \
-        0x00000 firmware/0x00000.bin \
-        0x10000 firmware/0x10000.bin
 
 ## Connecting the ESP to STM8
+
 <img src="imgs/connection-nodemcu.jpg" alt="NodeMCU connection" width="365" height="270" />
 
 * The STM8 device of course needs G and 3.3V connections.
@@ -56,44 +65,24 @@ Grap the latest `esp-stlink-firmware.tgz` from the releases page and flash it us
   > attached picture) or even solder it to your ESP-board permanently.
 
 To use other pins (e.g. on ESP01), [edit src/driver/swim.h](https://github.com/rumpeltux/esp-stlink/pull/14/commits/85b623648cd0e23b32bed80f588a16d292a5e8d0).
-  
 
-## ESP connection to the host computer
 
-The ESP exposes a serial interface which `stm8flash` uses to communicate with
-the ESP. Typically you’ll want to use a USB-to-serial adapter.
-The internet is full of tutorials on how to connect to an ESP.
+## Flashing STM8 firmware
 
-If you like it simple, get a NodeMCU or WeMos development board. These work
-out of the box, just connect to your computer’s USB, `make flash` and you’re
-ready to use `stm8flash` with `espstlink`.
+Connect the STM8 board as shown above and use the Python-based flashing tool (only works with STM8S not STM8L for now):
 
-## Flashing firmware
+```
+python3 python/flash.py -d /dev/ttyUSB0 -i sample.ihx
+```
 
-You need to build `libespstlink.so` first by running:
 
-    make -C lib
+## Compatibility
 
-Easiest is to use the python tool (only works with STM8S not STM8L for now):
-
-    python3 python/flash.py -d /dev/ttyUSB0 -i sample.ihx
-
-## Using ESP-STLINK with stm8flash
-
-**Note:** Older versions of stm8flash will not work with current versions, since
-starting with v0.2 of espstlink the default baudrate was switched from 115200 to
-921600, which allows for significantly faster flash speeds.
-
-Grab stm8flash from https://github.com/rumpeltux/stm8flash.
-
-    stm8flash -c espstlink -p stm8s103f3 -w sample.ihx
-
-### Compatibility
-
-So far this has only been tested with an stm8s103f3 chip.
+So far this has only been tested with an `stm8s103f3` chip.
 It’s likely that other devices work as well, but since there may be issues
 regarding timing of the wire protocol, there’s no guarantee that it’ll
 work.
+
 
 ## Related software
 
